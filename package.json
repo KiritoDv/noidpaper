@@ -1,0 +1,51 @@
+{
+  "name": "noidpaper",
+  "version": "1.0.1",
+  "description": "Custom wallpaper system based on electron <3",
+  "homepage": "https://github.com/KiritoDv/noidpaper",
+  "author": "KiritoDev",
+  "main": "src/main.js",
+  "productName": "noidpaper",
+  "scripts": {
+    "start": "electron --enable-transparent-visuals --disable-gpu .",
+    "dev": "electron .",
+    "build-linux": "electron-packager . --app-version 1.0.1 --platform linux --icon src/assets/icon.png --out ./dist --overwrite",
+    "build-win": "electron-packager . --app-version 1.0.1 --platform win32 --out ./dist/win --overwrite",
+    "deb64": "electron-installer-debian --src dist/noidpaper-linux-x64/ --icon src/assets/icon.png --dest dist/installers/ --arch amd64",
+    "deb32": "electron-installer-debian --src dist/noidpaper-linux-x32/ --icon src/assets/icon.png --dest dist/installers/ --arch i386",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "me.kiritodv.noidpaper",
+    "productName": "Noidpaper",
+    "linux": {
+      "category": "utils",
+      "icon": "src/assets/iconx256.png",
+      "packageCategory": "utils",
+      "maintainer": "@KiritoDev",
+      "target": [
+        "deb"
+      ],
+      "synopsis": "A custom wallpaper application with gifs support"
+    }
+  },
+  "keywords": [
+    "wallpaper"
+  ],
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "1.4.16",
+    "electron-packager": "^13.1.1",
+    "electron-builder": "^20.39.0"
+  },
+  "dependencies": {    
+    "download-file": "^0.1.5",    
+    "electron-json-config": "^1.5.3",
+    "jquery": "^3.3.1",
+    "mongodb": "^3.2.2",
+    "quickly-copy-file": "^1.0.0",
+    "request": "^2.88.0",
+    "socket.io": "^2.2.0"
+  }
+}

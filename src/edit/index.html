@@ -1,0 +1,330 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="./index.css">
+    <script>
+        const electron = require('electron');
+        const { dialog, app } = require('electron').remote
+
+        const ipcRenderer = electron.ipcRenderer;
+        const download = require('download-file')
+        const request = require("request")
+        const path = require('path');
+        const fs = require('fs');
+        const $ = require('jquery');
+
+        const copyFile = require('quickly-copy-file');
+
+        const ImageDB = require('../models/imagedb');
+        const imagedb = new ImageDB();
+
+        const user = (electron.app || electron.remote.app).getPath('userData');
+
+        var current;
+
+        var dir = path.join(user, "download");
+
+        function connectAndReload() {
+            return new Promise((resolve, reject) => {
+                imagedb.connect().then(db => {
+                    $('#wp').empty();
+                    imagedb.getImageList()
+                        .then(json => {
+                            var arr = Array.from(json);
+                            arr.forEach(item => {
+
+                                item = JSON.parse(JSON.stringify(item))
+
+                                item.id = item._id;
+
+                                var cfg = {
+                                    directory: dir,
+                                    filename: item.id + "." + (item.type.split("/")[1])
+                                }
+
+                                item.link = item.remote ? item.path : "http://imagedb.pixelclient.net/" + item.path
+
+                                var e = fs.existsSync(cfg.directory + "/" + cfg.filename);
+                                var p = "<div id='" + item.id + "' class='item'><div class='downloading' id='l-" + (item.id) + "'><div class='lds-hourglass'></div></div><div id='d-" + (item.id) + "' class='downloaded " + (e ? 'show' : '') + "'><svg viewBox='0 0 26 26'><g><path d='M 22.566406 4.730469 L 20.773438 3.511719 C 20.277344 3.175781 19.597656 3.304688 19.265625 3.796875 L 10.476563 16.757813 L 6.4375 12.71875 C 6.015625 12.296875 5.328125 12.296875 4.90625 12.71875 L 3.371094 14.253906 C 2.949219 14.675781 2.949219 15.363281 3.371094 15.789063 L 9.582031 22 C 9.929688 22.347656 10.476563 22.613281 10.96875 22.613281 C 11.460938 22.613281 11.957031 22.304688 12.277344 21.839844 L 22.855469 6.234375 C 23.191406 5.742188 23.0625 5.066406 22.566406 4.730469 Z '/></g></svg></div><div class='text'><p>" + (item.width) + "x" + (item.height) + "</p></div><img src=\"" + item.link + "\"/></div>"
+                                $(p).appendTo("#wp")
+
+                                if ($("#wp").children().length >= arr.length) {
+                                    resolve();
+                                }
+
+                                var it = $("#" + item.id);
+                                var md = $("#modal");
+                                var mde = document.getElementById("modal");
+                                it.click((e) => {
+                                    e.preventDefault();
+
+                                    if (!fs.existsSync(cfg.directory + "/" + cfg.filename)) {
+                                        $("#l-" + item.id).addClass("show");
+                                        download(item.link, cfg, function (err) {
+                                            if (err)
+                                                console.log(err)
+                                            else {
+                                                $("#l-" + item.id).removeClass("show");
+                                                $("#d-" + item.id).addClass("show");
+                                            }
+                                        })
+                                    }
+                                })
+                                it.contextmenu((e) => {
+                                    var b = fs.existsSync(cfg.directory + "/" + item.id + "." + (item.type.split("/")[1]));
+                                    var x = e.clientX;
+                                    var y = e.clientY;
+                                    current = item;
+
+                                    document.getElementById('bdelete').className = "bmodal " + (b ? 'enabled' : 'disabled')
+                                    document.getElementById('bdownload').className = "bmodal " + (b ? 'disabled' : 'enabled')
+
+                                    $("#smodal").removeClass("show");
+                                    md.css({ 'display': 'flex', 'top': y - 40, 'left': x - 72 })
+                                });
+                            })
+                        })
+                        .catch(err => console.error(err));
+                })
+            })
+        }
+
+        $(document).click((e) => {
+            if (e.button == 0) {
+                var c1 = !e.target.className.includes("bmodal");
+                var c2 = !e.target.className.includes("modal");
+                var c3 = !e.target.parentElement.className.includes("bmodal")
+                var c4 = !e.target.parentElement.className.includes("modal");
+
+                if (c1 && c2 && c3 && c4) {
+                    document.getElementById("modal").style.display = "none"
+                }
+            }
+        })
+
+        $(() => {
+
+            connectAndReload().then(log => console.log("Loaded"));
+            ipcRenderer.send('monitor-list', '');
+            ipcRenderer.on('monitor-list', (event, amount) => {
+                var m = $("#smodal");
+                m.empty();
+                m.css({ 'height': (10 + (amount * 40)) });
+                for (var i = 1; i < amount + 1; i++) {
+                    var tmp = "<div id='um-" + i + "' class='bmodal enabled' onclick='setWallpaper(" + (i - 1) + ");'><img src='\"../../../assets/monitor.png'\"/><p>Monitor " + i + "</p></div>"
+                    $(tmp).appendTo("#smodal")
+                }
+            })
+
+            $(window).scroll(function (event) {
+                var sc = $(window).scrollTop();
+                console.log(sc);
+            });
+
+
+            $(document).scroll(function (event) {
+                var scroll = $(window).scrollTop();
+                var b = document.getElementById("modal").style;
+                var x = parseInt(b.left.replace("px", ""));
+                var y = parseInt(b.top.replace("px", ""));
+
+                console.log(scroll + " : " + y)
+            });
+
+            $("#reload").on('click', e => {
+                $("#reload").addClass('spin');
+                connectAndReload().then(log => {
+                    $("#reload").removeClass('spin');
+                });
+
+            })
+            $("#bdownload").on('click', e => {
+                if (e.target.classList.contains("enabled") || e.target.parentElement.classList.contains("enabled")) {
+                    var cfg = {
+                        directory: dir,
+                        filename: current.id + "." + (current.type.split("/")[1])
+                    }
+                    document.getElementById("modal").style.display = "none"
+                    $("#l-" + current.id).addClass("show");
+                    download(current.link, cfg, function (err) {
+                        if (err)
+                            console.log(err)
+                        else {
+                            $("#l-" + current.id).removeClass("show");
+                            $("#d-" + current.id).addClass("show");
+                        }
+                    })
+                }
+            })
+
+            $("#bsave").on('click', e => {
+                document.getElementById("modal").style.display = "none"
+
+                var cfg = {
+                    directory: dir,
+                    filename: current.id + "." + (current.type.split("/")[1])
+                }
+
+                var copy = {
+                    directory: app.getPath('pictures'),
+                    filename: current.id + "." + (current.type.split("/")[1])
+                }
+                const options = {
+                    defaultPath: cfg.directory + '/' + cfg.filename
+                }
+
+                const oldFile = cfg.directory + '/' + cfg.filename;
+
+                dialog.showSaveDialog(null, options, (path) => {
+                    if (path) {
+                        document.getElementById("modal").style.display = "none"
+
+                        if (fs.existsSync(oldFile)) {
+
+                            $("#d-" + current.id).removeClass("show");
+                            $("#l-" + current.id).addClass("show");
+                            copyFile(oldFile, path)
+                                .then(res => {
+                                    $("#l-" + current.id).removeClass("show");
+                                    $("#d-" + current.id).addClass("show");
+                                })
+                                .catch(err => {
+                                    console.log(err)
+                                })
+
+                        } else {
+                            $("#l-" + current.id).addClass("show");
+                            download(current.link, cfg, function (err) {
+                                if (err)
+                                    console.log(err)
+                                else {
+                                    copyFile(oldFile, path)
+                                        .then(res => {
+                                            $("#l-" + current.id).removeClass("show");
+                                            $("#d-" + current.id).addClass("show");
+                                        })
+                                        .catch(err => {
+                                            console.log(err)
+                                        })
+                                }
+                            })
+                        }
+                    }
+                });
+            })
+
+            $("#bwallpaper").on('click', e => {
+                var b = document.getElementById("modal").style;
+                var x = parseInt(b.left.replace("px", "")) + 143;
+                var y = parseInt(b.top.replace("px", "")) + 160;
+
+                $("#smodal").toggleClass("show");
+                $("#smodal").css({ 'top': y + "px", 'left': x + "px" })
+            })
+
+            $("#bdelete").on('click', e => {
+                if (e.target.classList.contains("enabled") || e.target.parentElement.classList.contains("enabled")) {
+                    var path = dir + "/" + current.id + "." + (current.type.split("/")[1]);
+                    if (fs.existsSync(path)) {
+                        fs.unlinkSync(path);
+                        document.getElementById("modal").style.display = "none"
+                        $("#d-" + current.id).removeClass("show");
+                    }
+                }
+            })
+            $("#close").click(c => {
+                ipcRenderer.send('execute', 'close');
+            })
+            $("#minimize").click(c => {
+                ipcRenderer.send('execute', 'minimize');
+            })
+            $("#switch").click(c => {
+                ipcRenderer.send('execute', 'switch');
+            })
+            
+            var dragFix = false;
+
+            $("#dfile").on("dragover", (e) => {                
+                dragFix = true;                
+            });
+            $("#dfile").on("dragleave", (e) => {
+                dragFix = true;
+                console.log(dragFix)
+            });
+        })
+        function setWallpaper(monitor) {
+            var cfg = {
+                directory: dir,
+                filename: current.id + "." + (current.type.split("/")[1])
+            }
+            var path = dir + "/" + current.id + "." + (current.type.split("/")[1]);
+            if (!fs.existsSync(path)) {
+                download(current.link, cfg, function (err) {
+                    if (err)
+                        console.log(err)
+                    else {
+                        $("#d-" + current.id).addClass("show");
+                        ipcRenderer.send('update-lc', {
+                            monitor: monitor,
+                            url: path
+                        })
+                        document.getElementById("modal").style.display = "none"
+                    }
+                })
+            } else {
+                ipcRenderer.send('update-lc', {
+                    monitor: monitor,
+                    url: path
+                })
+                document.getElementById("modal").style.display = "none"
+            }
+        }
+    </script>
+    <script src="../assets/dropzone/dropzone.js"></script>
+</head>
+
+<body>
+
+    <div class="titlebar">
+        <div id="title">
+            <div class="a" id="close" style="background: #FC625D"></div>
+            <div class="a" id="switch" style="background: #FDBD41"></div>
+            <div class="a" id="minimize" style="background: #35C94A" onclick=""></div>
+            <img class="b" id="reload" src="../assets/icon.png" />
+        </div>
+    </div>
+    <div class="main">
+        <div class="drag">
+            <form action="/file-upload" class="dropzone" id="dfile"></form>
+        </div>
+        <div class="separator"></div>
+        <div class="wallpapers" id="wp">
+        </div>
+        <div id="modal" class="modal">
+            <div id="bview" class="bmodal disabled">
+                <img src="../assets/info.png" />
+                <p>View</p>
+            </div>
+            <div id="bdownload" class="bmodal enabled">
+                <img src="../assets/download.png" />
+                <p>Download</p>
+            </div>
+            <div id="bsave" class="bmodal enabled">
+                <img src="../assets/save.png" />
+                <p>Save As</p>
+            </div>
+            <div id="bwallpaper" class="bmodal enabled">
+                <img src="../assets/set.png" />
+                <p>Set Wallpaper</p>
+            </div>
+            <div id="bdelete" class="bmodal disabled">
+                <img src="../assets/delete.png" />
+                <p>Delete</p>
+            </div>
+            <div id="smodal" class="submodal">
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

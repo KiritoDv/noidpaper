@@ -1,0 +1,357 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+body, html {
+    position: absolute;
+    left: 0;
+}
+
+* {
+    font-family: 'Roboto', sans-serif;
+    font-weight: bold !important;
+}
+
+.main {
+    position: fixed;
+    top: 40px;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgb(82, 79, 79);
+    color: white;
+}
+
+.titlebar {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 40px;
+    background: rgb(39, 39, 39);
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    -webkit-app-region: drag;
+    flex-direction: row;
+}
+
+.titlebar #title {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    margin: auto;
+}
+
+.titlebar #title p {
+    text-align: center;
+    color: white;
+    margin: auto 0 auto 0;
+}
+
+.titlebar #title img {
+    width: 20px;
+    height: 20px;
+    margin: auto;
+}
+
+.titlebar #title .a {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    margin: auto 0 auto 10px;
+    -webkit-app-region: no-drag;
+}
+
+.titlebar #title .b {
+    width: 25px;
+    height: 25px;
+    margin: auto 10px auto auto;
+    -webkit-app-region: no-drag;
+}
+
+.titlebar #title .b:hover {
+    cursor: pointer;
+}
+
+.spin {
+    animation-name: spin;
+    animation-duration: 300ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.titlebar #title .a:hover {
+    filter: brightness(130%);
+}
+
+.main {
+    display: flex;
+    flex-direction: column;
+}
+
+.main .wallpapers {
+    display: flex;
+    width: 100vw;
+    height: calc(100vh - 40px);
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-y: scroll;
+}
+
+.main .wallpapers .item img {
+    width: 110%;
+}
+
+.main .wallpapers .item {
+    position: relative;
+    display: flex;
+    margin: 10px;
+    transition: 140ms linear all;
+    overflow: hidden;
+    width: 300px;
+    height: 200px;
+    border-radius: 3px;
+    justify-content: center;
+}
+
+.main .wallpapers .item .text {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 25px;
+    background-color: rgba(0, 0, 0, 0.383);
+    color: white;
+    display: flex;
+}
+
+.main .wallpapers .item .downloaded {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.609);
+    color: white;
+    justify-content: center;
+}
+
+.show {
+    display: flex !important;
+}
+
+.main .modal {
+    display: none;
+    flex-direction: column;
+    z-index: 99;
+    background: rgb(26, 25, 25);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 145px;
+    height: 210px;
+    user-select: none;
+}
+
+.main .modal .bmodal {
+    margin: 10px auto 0 auto;
+    width: 90%;
+    height: 30px;
+    background: rgb(87, 87, 87);
+    display: flex;
+    flex-direction: row;
+    border-radius: 2px;
+    font-size: 9pt;
+    user-select: none;
+}
+
+.main .modal .submodal {
+    display: none;
+    flex-direction: column;
+    z-index: 99;
+    background: rgb(26, 25, 25);
+    position: fixed;
+    width: 140px;
+    height: 10px;
+    user-select: none;
+    overflow: hidden;
+}
+
+.disabled {
+    color: rgb(128, 128, 128);
+}
+
+.enabled:hover {
+    background: rgb(49, 49, 49) !important;
+}
+
+.main .modal .bmodal p {
+    margin: auto 0 auto 7px;
+}
+
+.main .modal .bmodal img {
+    margin: auto 0 auto 10px;
+    width: 22px;
+    height: 22px;    
+}
+
+.separator{
+    display: block;
+    margin: 20px auto;    
+    width: 100%;
+    text-align: center !important;
+}
+
+.drag{
+    margin: 20px auto 0 auto;    
+}
+
+.dropzone {
+    display: flex;
+    width: 180px;
+    height: 110px;    
+    border-radius: 4px;
+    border: 2px dashed rgb(31, 31, 31);    
+    max-width: 500px;
+    margin: 0 auto;
+    color: black;
+    text-align: center;
+    transition: .05s linear all;
+}
+
+.dropzone:hover {
+    cursor: pointer;
+    transform: scale(1.06);    
+}
+
+.dz-preview{
+    display: none !important;
+}
+
+.dz-drag-hover{
+    cursor: pointer;
+    transform: scale(1.06);    
+}
+
+.dz-message{
+    font-weight: normal !important;
+    margin: auto;
+    color: white;
+    font-size: 9pt;
+}
+
+.dropzone p{
+    font-weight: normal !important;
+}
+
+.separator::before{
+    text-align: center;
+    content: "- or -"
+}
+
+.main .wallpapers .item .downloaded svg {
+    margin: auto;
+    fill: rgb(74, 251, 98);
+    width: 60px;
+}
+
+.main .wallpapers .item .text p {
+    text-align: center;
+    margin: auto;
+    font-size: 11pt;
+}
+
+.main .wallpapers .item:hover {
+    cursor: pointer;
+    transform: scale(1.05);
+}
+
+.downloading{
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: rgba(0, 0, 0, 0.609);
+    z-index: 101;
+}
+
+.downloading .lds-hourglass {    
+    display: inline-block;
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    top: calc(50% - 32px);
+    left: calc(50% - 32px);
+    z-index: 102;
+}
+
+.downloading .lds-hourglass:after {
+    content: " ";
+    display: block;
+    border-radius: 50%;
+    width: 0;
+    height: 0;
+    margin: 6px;
+    box-sizing: border-box;
+    border: 26px solid #fff;
+    border-color: #fff transparent #fff transparent;
+    animation: lds-hourglass 1.2s infinite;
+}
+
+@keyframes lds-hourglass {
+    0% {
+        transform: rotate(0);
+        animation-timing-function: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    }
+    50% {
+        transform: rotate(900deg);
+        animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    100% {
+        transform: rotate(1800deg);
+    }
+}
+
+:not(input):not(textarea), :not(input):not(textarea)::after, :not(input):not(textarea)::before {
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: default;
+}
+
+input, button, textarea, :focus {
+    outline: none;
+}
+
+::-webkit-scrollbar {
+    width: 9px;
+}
+
+/* Track */
+
+::-webkit-scrollbar-track {
+    background: #272727;
+}
+
+/* Handle */
+
+::-webkit-scrollbar-thumb {
+    background: rgb(71, 71, 71);
+}
+
+/* Handle on hover */
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

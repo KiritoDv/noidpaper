@@ -1,0 +1,12 @@
+
+/dist
+
+/node_modules
+
+/working
+
+*.lock
+
+config.json
+
+package-lock.json
